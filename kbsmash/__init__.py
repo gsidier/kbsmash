@@ -20,5 +20,8 @@ from kbsmash._terminal import (
     BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE,
 )
 
+# Video modes
+from kbsmash._screen import ASCII, EMOJI
+
 # Color style helper
 from kbsmash._screen import color

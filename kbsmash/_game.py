@@ -5,11 +5,12 @@ from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title=""):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii"):
         self._width = width
         self._height = height
         self._fps = fps
         self._title = title
+        self._mode = mode
         self._terminal = None
         self._screen = None
         self._timer = None
@@ -17,7 +18,7 @@ class Game:
     def start(self):
         self._terminal = Terminal()
         self._terminal.start(title=self._title)
-        self._screen = ScreenBuffer(self._width, self._height, self._terminal)
+        self._screen = ScreenBuffer(self._width, self._height, self._terminal, mode=self._mode)
         self._timer = Timer(self._fps)
 
     def stop(self):
@@ -48,10 +49,10 @@ class Game:
     def fill(self, x, y, w, h, char=" ", fg=WHITE, bg=BLACK):
         self._screen.fill(x, y, w, h, char, fg, bg)
 
-    def hline(self, x, y, length, char="─", fg=WHITE, bg=BLACK):
+    def hline(self, x, y, length, char=None, fg=WHITE, bg=BLACK):
         self._screen.hline(x, y, length, char, fg, bg)
 
-    def vline(self, x, y, length, char="│", fg=WHITE, bg=BLACK):
+    def vline(self, x, y, length, char=None, fg=WHITE, bg=BLACK):
         self._screen.vline(x, y, length, char, fg, bg)
 
     def draw(self):

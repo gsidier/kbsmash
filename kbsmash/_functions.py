@@ -1,5 +1,5 @@
 from kbsmash._terminal import Terminal, WHITE, BLACK
-from kbsmash._screen import ScreenBuffer, color
+from kbsmash._screen import ScreenBuffer, color, ASCII
 from kbsmash._input import translate_key
 from kbsmash._timing import Timer
 
@@ -13,11 +13,11 @@ def _require_started():
         raise RuntimeError("Call start() before using kbsmash functions")
 
 
-def start(width=40, height=20, fps=30, title=""):
+def start(width=40, height=20, fps=30, title="", mode="ascii"):
     global _terminal, _screen, _timer
     _terminal = Terminal()
     _terminal.start(title=title)
-    _screen = ScreenBuffer(width, height, _terminal)
+    _screen = ScreenBuffer(width, height, _terminal, mode=mode)
     _timer = Timer(fps)
 
 
@@ -55,12 +55,12 @@ def fill(x, y, w, h, char=" ", fg=WHITE, bg=BLACK):
     _screen.fill(x, y, w, h, char, fg, bg)
 
 
-def hline(x, y, length, char="─", fg=WHITE, bg=BLACK):
+def hline(x, y, length, char=None, fg=WHITE, bg=BLACK):
     _require_started()
     _screen.hline(x, y, length, char, fg, bg)
 
 
-def vline(x, y, length, char="│", fg=WHITE, bg=BLACK):
+def vline(x, y, length, char=None, fg=WHITE, bg=BLACK):
     _require_started()
     _screen.vline(x, y, length, char, fg, bg)
 

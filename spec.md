@@ -42,12 +42,50 @@ The student never imports these directly. They use either the function API or th
 
 ---
 
+## Video Modes
+
+Two mutually exclusive modes — no mixing of character widths:
+
+### ASCII Mode (`mode="ascii"`, default)
+
+- Each game cell = 1 terminal column
+- Only single-width characters allowed (letters, digits, box-drawing, etc.)
+- Emoji raises `ValueError`
+- `rect()`, `hline()`, `vline()` default to box-drawing characters
+
+```python
+start(40, 20, mode="ascii")
+put(5, 3, "@")       # ok
+put(5, 3, "🍎")     # ValueError
+```
+
+### Emoji Mode (`mode="emoji"`)
+
+- Each game cell = 2 terminal columns (grouped in pairs)
+- Only double-width characters allowed (emoji, CJK, etc.)
+- Single-width ASCII raises `ValueError`
+- `rect()`, `hline()`, `vline()` require a `char` argument (no box-drawing default)
+- Coordinates address the double-wide cells, so a width of 15 uses 30 terminal columns
+
+```python
+start(15, 20, mode="emoji")
+put(5, 3, "🍎")     # ok
+put(5, 3, "@")       # ValueError
+rect(0, 0, 15, 20, char="⬜")  # ok
+rect(0, 0, 15, 20)              # ValueError (no default in emoji mode)
+```
+
+Spaces are the one exception — allowed in both modes for `clear()` and `fill()`.
+
+---
+
 ## Coordinate System
 
 - Origin `(0, 0)` is **top-left**
 - `x` increases rightward, `y` increases downward
 - All coordinates are integers
 - Out-of-bounds writes are silently clipped (no crash, no wrap)
+- In emoji mode, each coordinate unit spans 2 terminal columns
 
 ---
 
@@ -380,16 +418,8 @@ with pong:
 - Internal 2D array of `(char, fg, bg)` tuples
 - `clear()` resets every cell to `(" ", WHITE, BLACK)`
 - `draw()` diffs the buffer against the previous frame and only writes changed cells (for performance)
-- Emoji handling: emoji occupy 2 cells in the terminal — `put()` accounts for this automatically by reserving the next cell
-
-### Emoji Width Handling
-
-Emoji are double-width in most terminals. When `put(x, y, "🔴")` is called:
-- The emoji is placed at `(x, y)`
-- The cell at `(x+1, y)` is marked as "continuation" and skipped during rendering
-- Subsequent `put(x+1, y, ...)` overwrites the continuation, replacing the emoji with a single-width char
-
-This means emoji effectively occupy 2 columns of game space. The student should account for this in their coordinate math, or use single-width characters for pixel-precise layouts.
+- In ASCII mode, each buffer cell maps 1:1 to a terminal column
+- In emoji mode, each buffer cell maps to 2 terminal columns — `draw()` multiplies x by 2, and cleared cells write two spaces
 
 ### Cleanup (`stop()`)
 

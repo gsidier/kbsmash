@@ -1,11 +1,11 @@
 from kbsmash import *
 from random import randint
 
-start(30, 20, fps=8, title="Snake")
+start(15, 20, fps=8, title="Snake", mode="emoji")
 
-snake = [(15, 10)]
+snake = [(7, 10)]
 direction = (1, 0)
-food = (randint(1, 28), randint(1, 18))
+food = (randint(1, 13), randint(1, 18))
 score = 0
 alive = True
 
@@ -19,7 +19,7 @@ while alive:
 
     head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
 
-    if (head[0] < 0 or head[0] >= 30 or
+    if (head[0] < 0 or head[0] >= 15 or
         head[1] < 0 or head[1] >= 20 or
         head in snake):
         alive = False
@@ -28,16 +28,15 @@ while alive:
     snake.insert(0, head)
     if head == food:
         score += 1
-        food = (randint(1, 28), randint(1, 18))
+        food = (randint(1, 13), randint(1, 18))
     else:
         snake.pop()
 
     clear()
-    rect(0, 0, 30, 20)
-    put(food[0], food[1], "@", fg=RED)
+    rect(0, 0, 15, 20, char="🚧")
+    put(food[0], food[1], "🍎")
     for i, seg in enumerate(snake):
-        put(seg[0], seg[1], "O" if i == 0 else "o", fg=GREEN)
-    text(1, 0, f" Score: {score} ", fg=YELLOW)
+        put(seg[0], seg[1], "😊" if i == 0 else "🍏")
     draw()
 
 stop()
