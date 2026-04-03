@@ -1,0 +1,6 @@
+- Robust cleanup: signal handlers (SIGINT, SIGTERM) in addition to atexit
+- Helpful error messages when terminal is too small for requested screen size
+- Terminal resize handling
+- Sokoban example
+- Roguelike example
+- Unit test suite (pytest)
