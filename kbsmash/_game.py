@@ -5,25 +5,35 @@ from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii", debounce=0):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii", debounce=0, input="curses"):
         self._width = width
         self._height = height
         self._fps = fps
         self._title = title
         self._mode = mode
         self._debounce = debounce
+        self._input = input
         self._terminal = None
         self._screen = None
         self._timer = None
+        self._keys = None
 
     def start(self):
         self._terminal = Terminal()
         self._terminal.start(title=self._title)
         self._screen = ScreenBuffer(self._width, self._height, self._terminal, mode=self._mode)
         self._timer = Timer(self._fps)
-        self._keys = KeyState(debounce=self._debounce)
+        if self._input == "pynput":
+            from kbsmash._pynput_input import PynputKeyState
+            self._keys = PynputKeyState(debounce=self._debounce)
+        elif self._input == "curses":
+            self._keys = KeyState(debounce=self._debounce)
+        else:
+            raise ValueError(f"input must be 'curses' or 'pynput', got {self._input!r}")
 
     def stop(self):
+        if self._keys is not None and hasattr(self._keys, "stop"):
+            self._keys.stop()
         if self._terminal:
             self._terminal.stop()
 

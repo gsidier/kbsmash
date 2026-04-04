@@ -143,15 +143,26 @@ key_down(KEY_UP)           # True if the key is held AND fires this frame
 key_pressed(KEY_ESCAPE)    # True only on the first frame the key is seen (edge-triggered)
 ```
 
-Terminals don't report key-release events, so `key_down()` approximates "held" by
-considering a key down for a short window (`hold_time`, default 0.05s) after it was
-last seen. OS key-repeat events arrive every ~30ms while held, each refreshing the
-window, so the key stays held as long as the user holds it. The short default keeps
-taps precise (a quick tap fires once and expires within a couple of frames).
+Terminals don't report key-release events. Two input backends are available:
 
-Note: the OS initial repeat delay (~500ms) is not bridged. When first pressing and
-holding a key, `key_down()` fires once immediately, then pauses until OS repeats
-begin (~500ms), then fires continuously.
+**curses** (default, stdlib only):
+Approximates "held" by considering a key down for `hold_time` seconds (default 0.6s)
+after last OS event. Long enough to bridge the OS initial key-repeat delay (~500ms)
+so held keys respond immediately. Conflicting keys (UP/DOWN, LEFT/RIGHT) cancel
+each other on press, which keeps taps precise. Trade-off: a genuinely held-then-released
+key can still produce some residual movement after release (up to hold_time).
+
+**pynput** (optional, real key state):
+Uses OS-level key event hooks — real key-down and key-up events. No repeat delay,
+no phantom taps, accurate release detection.
+- Install: `uv sync --extra pynput` (or `pip install pynput`)
+- macOS: grant Accessibility permission on first run
+- Captures keys globally (listens system-wide, not just the terminal)
+- Select with `input="pynput"` on `start()` / `Game.__init__()`
+
+```python
+start(60, 24, fps=30, input="pynput", debounce=0.03)
+```
 
 #### Debounce
 

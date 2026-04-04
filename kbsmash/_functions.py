@@ -14,17 +14,25 @@ def _require_started():
         raise RuntimeError("Call start() before using kbsmash functions")
 
 
-def start(width=40, height=20, fps=30, title="", mode="ascii", debounce=0):
+def start(width=40, height=20, fps=30, title="", mode="ascii", debounce=0, input="curses"):
     global _terminal, _screen, _timer, _keys
     _terminal = Terminal()
     _terminal.start(title=title)
     _screen = ScreenBuffer(width, height, _terminal, mode=mode)
     _timer = Timer(fps)
-    _keys = KeyState(debounce=debounce)
+    if input == "pynput":
+        from kbsmash._pynput_input import PynputKeyState
+        _keys = PynputKeyState(debounce=debounce)
+    elif input == "curses":
+        _keys = KeyState(debounce=debounce)
+    else:
+        raise ValueError(f"input must be 'curses' or 'pynput', got {input!r}")
 
 
 def stop():
     global _terminal, _screen, _timer, _keys
+    if _keys is not None and hasattr(_keys, "stop"):
+        _keys.stop()
     if _terminal:
         _terminal.stop()
     _terminal = None
