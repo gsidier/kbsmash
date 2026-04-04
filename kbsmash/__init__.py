@@ -1,7 +1,8 @@
 # Function-based API
 from kbsmash._functions import (
     start, stop, clear, put, text, rect, fill, hline, vline,
-    draw, get_key, screen_width, screen_height, dt,
+    draw, get_key, update_keys, key_down, key_pressed,
+    screen_width, screen_height, dt,
 )
 
 # Class-based API

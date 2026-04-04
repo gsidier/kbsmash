@@ -3,7 +3,7 @@ from kbsmash import Game, KEY_UP, KEY_DOWN, KEY_ESCAPE, WHITE, YELLOW
 
 class Pong(Game):
     def __init__(self):
-        super().__init__(60, 24, fps=30, title="Pong")
+        super().__init__(60, 24, fps=30, title="Pong", debounce=0.05)
         self.paddle_y = 10
         self.ball_x, self.ball_y = 30, 12
         self.ball_dx, self.ball_dy = 1, 1
@@ -14,12 +14,12 @@ pong = Pong()
 
 with pong:
     while True:
-        key = pong.get_key()
-        if key == KEY_ESCAPE:
+        pong.update_keys()
+        if pong.key_pressed(KEY_ESCAPE):
             break
-        if key == KEY_UP and pong.paddle_y > 0:
+        if pong.key_down(KEY_UP) and pong.paddle_y > 0:
             pong.paddle_y -= 1
-        if key == KEY_DOWN and pong.paddle_y < pong.height - 5:
+        if pong.key_down(KEY_DOWN) and pong.paddle_y < pong.height - 5:
             pong.paddle_y += 1
 
         pong.ball_x += pong.ball_dx
@@ -38,7 +38,7 @@ with pong:
         pong.clear()
         pong.rect(0, 0, pong.width, pong.height)
         for i in range(5):
-            pong.put(1, pong.paddle_y + i, "|", fg=WHITE)
+            pong.put(1, pong.paddle_y + i, "█", fg=WHITE)
         pong.put(pong.ball_x, pong.ball_y, "O", fg=YELLOW)
         pong.text(pong.width // 2 - 4, 0, f" {pong.score} ", fg=YELLOW)
         pong.draw()

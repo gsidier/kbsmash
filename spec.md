@@ -121,7 +121,9 @@ put(5, 3, "!", style=danger)
 
 ## Input System
 
-### Key Reading
+Two input styles are available:
+
+### Simple: `get_key()`
 
 ```python
 key = get_key()  # returns a key constant, or None if no key is pressed
@@ -129,6 +131,43 @@ key = get_key()  # returns a key constant, or None if no key is pressed
 
 - **Non-blocking** — returns `None` immediately if nothing is pressed
 - Returns key constants for special keys, single characters for printable keys
+- Reads one key per call — fine for turn-based or direction-setting games (snake, sokoban)
+
+### Held keys: `update_keys()` + `key_down()` / `key_pressed()`
+
+For games where the player holds a key for continuous movement (pong, platformers):
+
+```python
+update_keys()              # drain input buffer, update key state — call once per frame
+key_down(KEY_UP)           # True if the key is held AND fires this frame
+key_pressed(KEY_ESCAPE)    # True only on the first frame the key is seen (edge-triggered)
+```
+
+Terminals don't report key-release events, so `key_down()` approximates "held" by
+considering a key down for a short window (`hold_time`, default 0.05s) after it was
+last seen. OS key-repeat events arrive every ~30ms while held, each refreshing the
+window, so the key stays held as long as the user holds it. The short default keeps
+taps precise (a quick tap fires once and expires within a couple of frames).
+
+Note: the OS initial repeat delay (~500ms) is not bridged. When first pressing and
+holding a key, `key_down()` fires once immediately, then pauses until OS repeats
+begin (~500ms), then fires continuously.
+
+#### Debounce
+
+The `debounce` parameter (seconds) controls how often `key_down()` fires while
+a key is held. Set it on `start()` or `Game.__init__()`:
+
+```python
+start(60, 24, fps=30, debounce=0.05)  # key_down fires at most once per 50ms
+```
+
+- `debounce=0` (default) — fires every frame (no rate limiting)
+- `debounce=0.05` — fires immediately on press, then once every 50ms while held
+- The initial delay equals the repeat interval (no extra wait before first repeat)
+
+**Don't mix** `get_key()` and `update_keys()` in the same loop — both drain the input
+buffer, so one will steal events from the other.
 
 ### Key Constants
 

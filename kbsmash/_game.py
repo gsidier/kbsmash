@@ -1,16 +1,17 @@
 from kbsmash._terminal import Terminal, WHITE, BLACK
 from kbsmash._screen import ScreenBuffer
-from kbsmash._input import translate_key
+from kbsmash._input import translate_key, KeyState
 from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii"):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii", debounce=0):
         self._width = width
         self._height = height
         self._fps = fps
         self._title = title
         self._mode = mode
+        self._debounce = debounce
         self._terminal = None
         self._screen = None
         self._timer = None
@@ -20,6 +21,7 @@ class Game:
         self._terminal.start(title=self._title)
         self._screen = ScreenBuffer(self._width, self._height, self._terminal, mode=self._mode)
         self._timer = Timer(self._fps)
+        self._keys = KeyState(debounce=self._debounce)
 
     def stop(self):
         if self._terminal:
@@ -64,6 +66,15 @@ class Game:
     def get_key(self):
         raw = self._terminal.get_key_raw()
         return translate_key(raw)
+
+    def update_keys(self):
+        self._keys.update(self._terminal)
+
+    def key_down(self, key):
+        return self._keys.is_down(key)
+
+    def key_pressed(self, key):
+        return self._keys.just_pressed(key)
 
     # --- Info ---
 
