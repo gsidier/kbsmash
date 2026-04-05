@@ -7,8 +7,8 @@ Students write the game loop themselves; kbsmash handles the terminal, drawing, 
 ## Install
 
 ```bash
-uv sync                   # core engine (stdlib only)
-uv sync --extra pynput    # also install pynput for precise key handling
+uv init .
+uv add 'git+https://github.com/gsidier/kbsmash.git'
 ```
 
 ## Quick example

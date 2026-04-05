@@ -16,6 +16,11 @@ dependencies = [
     "pynput>=1.7",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=7",
+]
+
 [project.urls]
 Homepage = "https://github.com/gsidier/kbsmash"
 
@@ -25,3 +30,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["kbsmash"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
