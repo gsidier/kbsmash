@@ -39,6 +39,29 @@ def _bg_code(color):
     return 40 + color
 
 
+def _enable_windows_vt():
+    """Enable ANSI escape sequence processing on the Windows console.
+
+    By default, the Windows console writes ANSI bytes literally. We need
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING on stdout and ENABLE_VIRTUAL_TERMINAL_INPUT
+    on stdin for our direct-ANSI rendering to work. No-op on other platforms.
+    """
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    kernel32 = ctypes.windll.kernel32
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+    STD_OUTPUT_HANDLE = -11
+
+    h_out = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+    mode = ctypes.c_ulong()
+    if kernel32.GetConsoleMode(h_out, ctypes.byref(mode)):
+        kernel32.SetConsoleMode(
+            h_out, mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        )
+
+
 class Terminal:
     def __init__(self):
         self._scr = None
@@ -64,10 +87,16 @@ class Terminal:
         # Tell curses not to track the physical cursor — we position it
         # ourselves with ANSI escapes.
         self._scr.leaveok(True)
+        # On Windows, curses/windows-curses may leave the console without
+        # VT processing enabled, so our ANSI escapes would be written
+        # literally (or buffered and only flushed on exit). Enable it now,
+        # after curses has finished setting up the console.
+        _enable_windows_vt()
         self._started = True
         atexit.register(self.stop)
-        # Clear the alt screen we just entered.
-        sys.stdout.write("\x1b[2J")
+        # Enter the alt screen and clear it. curses does not reliably
+        # switch to the alt screen on Windows, so we do it explicitly.
+        sys.stdout.write("\x1b[?1049h\x1b[2J\x1b[H")
         if title:
             sys.stdout.write(f"\x1b]0;{title}\x07")
         sys.stdout.flush()
@@ -76,8 +105,8 @@ class Terminal:
         if not self._started:
             return
         self._started = False
-        # Reset any lingering SGR attributes before leaving alt screen.
-        sys.stdout.write("\x1b[0m")
+        # Reset SGR attributes and leave the alt screen we entered in start().
+        sys.stdout.write("\x1b[0m\x1b[?1049l")
         sys.stdout.flush()
         try:
             curses.curs_set(1)
