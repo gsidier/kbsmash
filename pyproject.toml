@@ -1,12 +1,23 @@
-[project]
-name = "kbsmash"
+[project]                                                                                                                                                                                                     
+name = "kbsmash"                                                                                                                                                                                              
 version = "0.1.0"
-description = "Terminal arcade engine"
+description = "Terminal arcade game engine for educational purposes"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Your Name", email = "kbsmash@gsidier.com" }]
 requires-python = ">=3.9"
-dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console :: Curses",
+    "Topic :: Games/Entertainment",
+]
+dependencies = [
+    "pynput>=1.7",
+]
 
-[project.optional-dependencies]
-pynput = ["pynput>=1.7"]
+[project.urls]
+Homepage = "https://github.com/gsidier/kbsmash"
 
 [build-system]
 requires = ["hatchling"]
