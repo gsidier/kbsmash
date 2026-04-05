@@ -1,118 +1,97 @@
-from kbsmash._terminal import Terminal, WHITE, BLACK
-from kbsmash._screen import ScreenBuffer, color, ASCII
-from kbsmash._input import translate_key, KeyState
-from kbsmash._timing import Timer
+from kbsmash._terminal import WHITE, BLACK
+from kbsmash._game import Game
 
-_terminal = None
-_screen = None
-_timer = None
-_keys = None
+_game = None
 
 
 def _require_started():
-    if _terminal is None or not _terminal.started:
+    if _game is None:
         raise RuntimeError("Call start() before using kbsmash functions")
 
 
 def start(width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput"):
-    global _terminal, _screen, _timer, _keys
-    _terminal = Terminal()
-    _terminal.start(title=title)
-    _screen = ScreenBuffer(width, height, _terminal, mode=mode)
-    _timer = Timer(fps)
-    if input == "pynput":
-        from kbsmash._pynput_input import PynputKeyState
-        _keys = PynputKeyState(debounce=debounce)
-    elif input == "curses":
-        _keys = KeyState(debounce=debounce)
-    else:
-        raise ValueError(f"input must be 'curses' or 'pynput', got {input!r}")
+    global _game
+    _game = Game(width, height, fps, title, mode, debounce, input)
+    _game.start()
 
 
 def stop():
-    global _terminal, _screen, _timer, _keys
-    if _keys is not None and hasattr(_keys, "stop"):
-        _keys.stop()
-    if _terminal:
-        _terminal.stop()
-    _terminal = None
-    _screen = None
-    _timer = None
-    _keys = None
+    global _game
+    if _game is not None:
+        _game.stop()
+    _game = None
 
 
 def clear(char=" "):
     _require_started()
-    _screen.clear(char)
+    _game.clear(char)
 
 
 def put(x, y, char, fg=WHITE, bg=BLACK, style=None):
     _require_started()
-    _screen.put(x, y, char, fg, bg, style)
+    _game.put(x, y, char, fg, bg, style)
 
 
 def text(x, y, string, fg=WHITE, bg=BLACK, style=None):
     _require_started()
-    _screen.text(x, y, string, fg, bg, style)
+    _game.text(x, y, string, fg, bg, style)
 
 
 def rect(x, y, w, h, char=None, fg=WHITE, bg=BLACK):
     _require_started()
-    _screen.rect(x, y, w, h, char, fg, bg)
+    _game.rect(x, y, w, h, char, fg, bg)
 
 
 def fill(x, y, w, h, char=" ", fg=WHITE, bg=BLACK):
     _require_started()
-    _screen.fill(x, y, w, h, char, fg, bg)
+    _game.fill(x, y, w, h, char, fg, bg)
 
 
 def hline(x, y, length, char=None, fg=WHITE, bg=BLACK):
     _require_started()
-    _screen.hline(x, y, length, char, fg, bg)
+    _game.hline(x, y, length, char, fg, bg)
 
 
 def vline(x, y, length, char=None, fg=WHITE, bg=BLACK):
     _require_started()
-    _screen.vline(x, y, length, char, fg, bg)
+    _game.vline(x, y, length, char, fg, bg)
 
 
 def draw():
     _require_started()
-    _screen.draw()
-    _timer.wait()
+    _game.draw()
 
 
 def get_key():
     _require_started()
-    raw = _terminal.get_key_raw()
-    return translate_key(raw)
+    return _game.get_key()
 
 
 def update_keys():
     _require_started()
-    _keys.update(_terminal)
+    _game.update_keys()
 
 
 def key_down(key):
     _require_started()
-    return _keys.is_down(key)
+    return _game.key_down(key)
 
 
 def key_pressed(key):
     _require_started()
-    return _keys.just_pressed(key)
+    return _game.key_pressed(key)
 
 
 def screen_width():
     _require_started()
-    return _screen.width
+    return _game.width
 
 
 def screen_height():
     _require_started()
-    return _screen.height
+    return _game.height
 
 
 def dt():
     _require_started()
-    return _timer.dt
+    return _game.dt()
