@@ -1,7 +1,7 @@
 [project]
 name = "kbsmash"
 version = "0.1.0"
-description = "Terminal arcade engine for teaching kids programming"
+description = "Terminal arcade engine"
 requires-python = ">=3.9"
 dependencies = []
 

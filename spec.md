@@ -1,4 +1,4 @@
-# kbsmash — Terminal Arcade Engine for Kids
+# kbsmash — Terminal Arcade Engine
 
 A minimal Python engine for building terminal-based arcade games, designed to teach programming.
 
