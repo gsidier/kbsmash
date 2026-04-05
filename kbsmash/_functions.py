@@ -14,7 +14,7 @@ def _require_started():
         raise RuntimeError("Call start() before using kbsmash functions")
 
 
-def start(width=40, height=20, fps=30, title="", mode="ascii", debounce=0, input="curses"):
+def start(width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput"):
     global _terminal, _screen, _timer, _keys
     _terminal = Terminal()
     _terminal.start(title=title)

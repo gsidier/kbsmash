@@ -77,6 +77,11 @@ rect(0, 0, 15, 20)              # ValueError (no default in emoji mode)
 
 Spaces are the one exception — allowed in both modes for `clear()` and `fill()`.
 
+`text()` is also allowed in emoji mode as a special case: it packs two ASCII
+chars per emoji cell, so scores and labels still work. Odd-length strings are
+padded with a trailing space. Passing a wide char to `text()` in emoji mode
+raises `ValueError`.
+
 ---
 
 ## Coordinate System

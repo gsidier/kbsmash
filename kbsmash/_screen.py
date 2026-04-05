@@ -93,8 +93,26 @@ class ScreenBuffer:
         if style:
             fg = style.fg
             bg = style.bg
-        for i, ch in enumerate(string):
-            self.put(x + i, y, ch, fg, bg)
+        if self._mode == EMOJI:
+            # In emoji mode each cell is 2 terminal columns wide, so we pack
+            # two ASCII chars per cell. This lets text() still be used for
+            # scores, labels, etc. in emoji games.
+            for ch in string:
+                if _is_wide(ch):
+                    raise ValueError(
+                        f"text() in emoji mode expects narrow (ASCII) "
+                        f"characters — got wide char {ch!r}"
+                    )
+            if len(string) % 2 == 1:
+                string = string + " "
+            for i in range(0, len(string), 2):
+                cx = x + i // 2
+                if cx < 0 or cx >= self._width or y < 0 or y >= self._height:
+                    continue
+                self._buf[y][cx] = (string[i:i + 2], fg, bg)
+        else:
+            for i, ch in enumerate(string):
+                self.put(x + i, y, ch, fg, bg)
 
     def rect(self, x, y, w, h, char=None, fg=WHITE, bg=BLACK):
         if w < 2 or h < 2:

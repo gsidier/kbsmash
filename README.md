@@ -45,7 +45,7 @@ stop()
 - **Drawing primitives** — `put`, `text`, `rect`, `fill`, `hline`, `vline`
 - **Colors** — 16 named colors with fg/bg, reusable `color()` styles
 - **Input** — simple `get_key()` or held-key tracking with `update_keys()` + `key_down()` + `key_pressed()`
-- **Input backends** — stdlib curses by default, or pynput for arcade-feel key handling (no OS repeat delay)
+- **Input backends** — pynput for arcade-feel key handling (no OS repeat delay), or curses for portability
 - **FPS regulation** — fixed frame rate or unlimited, with `dt()` for smooth movement
 
 ## Examples

@@ -5,7 +5,7 @@ from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title="", mode="ascii", debounce=0, input="curses"):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput"):
         self._width = width
         self._height = height
         self._fps = fps
