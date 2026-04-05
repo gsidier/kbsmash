@@ -33,7 +33,8 @@ while alive:
         snake.pop()
 
     clear()
-    rect(0, 0, 15, 20, char="🚧")
+    #rect(0, 0, 15, 20, char="🚧")
+    rect(0, 0, 15, 20, char="🟫")
     put(food[0], food[1], "🍎")
     for i, seg in enumerate(snake):
         put(seg[0], seg[1], "😺" if i == 0 else "🍏")

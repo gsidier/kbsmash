@@ -1,6 +1,11 @@
 import atexit
 import curses
+import locale
 import sys
+
+# Must be called before curses.initscr() so curses uses the system UTF-8
+# encoding when rendering multi-byte characters (emoji, etc.)
+locale.setlocale(locale.LC_ALL, "")
 
 # --- Color constants ---
 BLACK = 0
@@ -20,23 +25,23 @@ BRIGHT_MAGENTA = 13
 BRIGHT_CYAN = 14
 BRIGHT_WHITE = 15
 
-_CURSES_COLORS = {
-    BLACK: curses.COLOR_BLACK,
-    RED: curses.COLOR_RED,
-    GREEN: curses.COLOR_GREEN,
-    YELLOW: curses.COLOR_YELLOW,
-    BLUE: curses.COLOR_BLUE,
-    MAGENTA: curses.COLOR_MAGENTA,
-    CYAN: curses.COLOR_CYAN,
-    WHITE: curses.COLOR_WHITE,
-}
+
+def _fg_code(color):
+    # normal 0-7 -> 30-37, bright 8-15 -> 90-97
+    if color >= 8:
+        return 90 + (color - 8)
+    return 30 + color
+
+
+def _bg_code(color):
+    if color >= 8:
+        return 100 + (color - 8)
+    return 40 + color
 
 
 class Terminal:
     def __init__(self):
         self._scr = None
-        self._color_pairs = {}
-        self._next_pair = 1
         self._started = False
 
     @property
@@ -46,25 +51,34 @@ class Terminal:
     def start(self, title=""):
         if self._started:
             return
+        # Use curses only for terminal setup (alt screen, raw mode) and input.
+        # All character output is done via direct ANSI escape sequences to
+        # bypass ncurses' outdated wcwidth tables which mis-measure many
+        # emoji on macOS and break cursor tracking.
         self._scr = curses.initscr()
         curses.noecho()
         curses.cbreak()
         curses.curs_set(0)
         self._scr.keypad(True)
         self._scr.nodelay(True)
-        if curses.has_colors():
-            curses.start_color()
-            curses.use_default_colors()
+        # Tell curses not to track the physical cursor — we position it
+        # ourselves with ANSI escapes.
+        self._scr.leaveok(True)
         self._started = True
         atexit.register(self.stop)
+        # Clear the alt screen we just entered.
+        sys.stdout.write("\x1b[2J")
         if title:
-            sys.stdout.write(f"\033]0;{title}\007")
-            sys.stdout.flush()
+            sys.stdout.write(f"\x1b]0;{title}\x07")
+        sys.stdout.flush()
 
     def stop(self):
         if not self._started:
             return
         self._started = False
+        # Reset any lingering SGR attributes before leaving alt screen.
+        sys.stdout.write("\x1b[0m")
+        sys.stdout.flush()
         try:
             curses.curs_set(1)
         except curses.error:
@@ -74,39 +88,20 @@ class Terminal:
         curses.echo()
         curses.endwin()
 
-    def get_color_pair(self, fg, bg):
-        key = (fg, bg)
-        if key in self._color_pairs:
-            return self._color_pairs[key]
-
-        curses_fg = _CURSES_COLORS.get(fg % 8, curses.COLOR_WHITE)
-        curses_bg = _CURSES_COLORS.get(bg % 8, curses.COLOR_BLACK)
-
-        pair_num = self._next_pair
-        self._next_pair += 1
-        try:
-            curses.init_pair(pair_num, curses_fg, curses_bg)
-        except curses.error:
-            pair_num = 0
-
-        attr = curses.color_pair(pair_num)
-        if fg >= 8:
-            attr |= curses.A_BOLD
-        self._color_pairs[key] = attr
-        return attr
-
     def write_char(self, x, y, char, fg=WHITE, bg=BLACK):
         if not self._started:
             return
-        attr = self.get_color_pair(fg, bg)
-        try:
-            self._scr.addstr(y, x, char, attr)
-        except curses.error:
-            pass
+        # ANSI cursor position is 1-indexed: ESC[row;colH
+        sys.stdout.write(
+            f"\x1b[{y + 1};{x + 1}H"
+            f"\x1b[{_fg_code(fg)};{_bg_code(bg)}m"
+            f"{char}"
+            f"\x1b[0m"
+        )
 
     def refresh(self):
         if self._started:
-            self._scr.refresh()
+            sys.stdout.flush()
 
     def get_key_raw(self):
         if not self._started:
