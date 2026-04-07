@@ -82,6 +82,11 @@ def key_pressed(key):
     return _game.key_pressed(key)
 
 
+def keys_down():
+    _require_started()
+    return _game.keys_down()
+
+
 def screen_width():
     _require_started()
     return _game.width

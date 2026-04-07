@@ -1,7 +1,7 @@
 # Function-based API
 from kbsmash._functions import (
     start, stop, clear, put, text, rect, fill, hline, vline,
-    draw, get_key, update_keys, key_down, key_pressed,
+    draw, get_key, update_keys, key_down, key_pressed, keys_down,
     screen_width, screen_height, dt,
 )
 

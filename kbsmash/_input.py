@@ -138,3 +138,7 @@ class KeyState:
     def just_pressed(self, key):
         """True if the key was first pressed this frame (edge-triggered)."""
         return key in self._just_pressed
+
+    def keys_down(self):
+        """Return the set of keys that are firing this frame."""
+        return frozenset(self._firing)

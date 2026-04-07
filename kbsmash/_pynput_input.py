@@ -111,6 +111,9 @@ class PynputKeyState:
     def just_pressed(self, key):
         return key in self._just_pressed
 
+    def keys_down(self):
+        return frozenset(self._firing)
+
     def stop(self):
         if self._listener is not None:
             self._listener.stop()

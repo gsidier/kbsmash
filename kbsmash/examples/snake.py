@@ -1,7 +1,7 @@
 from kbsmash import *
 from random import randint
 
-start(30, 20, fps=8, title="Snake")
+start(30, 20, fps=8, title="Snake", mode="ascii")
 
 snake = [(15, 10)]
 direction = (1, 0)

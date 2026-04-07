@@ -2,6 +2,7 @@ import atexit
 import curses
 import locale
 import sys
+import traceback
 
 # Must be called before curses.initscr() so curses uses the system UTF-8
 # encoding when rendering multi-byte characters (emoji, etc.)
@@ -94,6 +95,11 @@ class Terminal:
         _enable_windows_vt()
         self._started = True
         atexit.register(self.stop)
+        # Install an excepthook that restores the terminal before printing
+        # the traceback. Without this, the traceback renders into the alt
+        # screen (invisible) or into a still-raw console (garbled).
+        self._prev_excepthook = sys.excepthook
+        sys.excepthook = self._excepthook
         # Enter the alt screen and clear it. curses does not reliably
         # switch to the alt screen on Windows, so we do it explicitly.
         sys.stdout.write("\x1b[?1049h\x1b[2J\x1b[H")
@@ -101,10 +107,17 @@ class Terminal:
             sys.stdout.write(f"\x1b]0;{title}\x07")
         sys.stdout.flush()
 
+    def _excepthook(self, exc_type, exc_value, exc_tb):
+        self.stop()
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+
     def stop(self):
         if not self._started:
             return
         self._started = False
+        # Restore the previous excepthook.
+        if hasattr(self, "_prev_excepthook"):
+            sys.excepthook = self._prev_excepthook
         # Reset SGR attributes and leave the alt screen we entered in start().
         sys.stdout.write("\x1b[0m\x1b[?1049l")
         sys.stdout.flush()

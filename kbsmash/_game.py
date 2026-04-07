@@ -86,6 +86,9 @@ class Game:
     def key_pressed(self, key):
         return self._keys.just_pressed(key)
 
+    def keys_down(self):
+        return self._keys.keys_down()
+
     # --- Info ---
 
     @property

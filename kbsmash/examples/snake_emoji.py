@@ -11,13 +11,13 @@ start(width, height, fps=8, title="Snake", mode="emoji")
 while True: # loop forever
 
     while True: # wait key press to start game
-        key = get_key()
+        update_keys()
 
-        if key == KEY_ESCAPE:
+        if key_pressed(KEY_ESCAPE):
             play = False
             break
 
-        elif key is not None:
+        elif len(keys_down()) > 0:
             play = True
             break
 
@@ -35,12 +35,13 @@ while True: # loop forever
     score = 0
 
     while alive: # game loop
-        key = get_key()
-        if (key == KEY_UP) and (direction != (0, 1)):      direction = (0, -1)
-        elif key == KEY_DOWN and (direction != (0, -1)):  direction = (0, 1)
-        elif key == KEY_LEFT and (direction != (1, 0)):  direction = (-1, 0)
-        elif key == KEY_RIGHT and (direction != (-1, 0)): direction = (1, 0)
-        elif key == KEY_ESCAPE: break
+        
+        update_keys()
+        if key_down(KEY_UP) and (direction != (0, 1)):      direction = (0, -1)
+        elif key_down(KEY_DOWN) and (direction != (0, -1)):  direction = (0, 1)
+        elif key_down(KEY_LEFT) and (direction != (1, 0)):  direction = (-1, 0)
+        elif key_down(KEY_RIGHT) and (direction != (-1, 0)): direction = (1, 0)
+        elif key_down(KEY_ESCAPE): break
 
         head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
 
