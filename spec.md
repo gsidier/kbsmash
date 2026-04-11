@@ -185,6 +185,31 @@ start(60, 24, fps=30, debounce=0.05)  # key_down fires at most once per 50ms
 **Don't mix** `get_key()` and `update_keys()` in the same loop — both drain the input
 buffer, so one will steal events from the other.
 
+#### `keys_down()`
+
+Returns a `frozenset` of all keys currently held this frame. Useful when you
+want to check several keys at once without a chain of `key_down()` calls (e.g.
+diagonal movement from simultaneous arrow keys).
+
+```python
+update_keys()
+held = keys_down()
+if KEY_UP in held and KEY_RIGHT in held:
+    x += 1
+    y -= 1
+```
+
+### vsync / flicker
+
+`draw()` batches the whole frame into a single stdout write wrapped in DEC
+private mode 2026 (Synchronized Output) by default, so the terminal applies
+the frame atomically and there is no visible flicker on large diffs
+(full-screen fills, particle fields, emoji walls). This works on iTerm2,
+kitty, WezTerm, Windows Terminal, and modern xterm / VS Code terminals.
+Non-supporting terminals ignore the escape and still benefit from batching
+and SGR/CUP elision. Pass `vsync=False` on `start()` / `Game.__init__()` if
+you need to disable mode 2026 specifically.
+
 ### Key Constants
 
 ```python
@@ -475,6 +500,7 @@ with pong:
 - `draw()` diffs the buffer against the previous frame and only writes changed cells (for performance)
 - In ASCII mode, each buffer cell maps 1:1 to a terminal column
 - In emoji mode, each buffer cell maps to 2 terminal columns — `draw()` multiplies x by 2, and cleared cells write two spaces
+- Each `draw()` emits a single batched stdout write wrapped in DEC private mode 2026 (Synchronized Output). On supporting terminals the frame is applied atomically — no flicker. Non-supporting terminals silently ignore the escape. Within the frame, redundant `SGR` and `CUP` escapes are elided (color is kept until it changes, cursor positioning is skipped when writing adjacent cells). Disabling `vsync=False` drops the mode 2026 wrapping but keeps batching and elision.
 
 ### Cleanup (`stop()`)
 

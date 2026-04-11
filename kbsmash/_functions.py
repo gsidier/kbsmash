@@ -9,9 +9,9 @@ def _require_started():
         raise RuntimeError("Call start() before using kbsmash functions")
 
 
-def start(width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput"):
+def start(width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput", vsync=True):
     global _game
-    _game = Game(width, height, fps, title, mode, debounce, input)
+    _game = Game(width, height, fps, title, mode, debounce, input, vsync)
     _game.start()
 
 

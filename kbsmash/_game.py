@@ -5,7 +5,7 @@ from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput"):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput", vsync=True):
         self._width = width
         self._height = height
         self._fps = fps
@@ -13,13 +13,14 @@ class Game:
         self._mode = mode
         self._debounce = debounce
         self._input = input
+        self._vsync = vsync
         self._terminal = None
         self._screen = None
         self._timer = None
         self._keys = None
 
     def start(self):
-        self._terminal = Terminal()
+        self._terminal = Terminal(vsync=self._vsync)
         self._terminal.start(title=self._title)
         self._screen = ScreenBuffer(self._width, self._height, self._terminal, mode=self._mode)
         self._timer = Timer(self._fps)

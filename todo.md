@@ -3,4 +3,3 @@
 - Terminal resize handling
 - Sokoban example
 - Roguelike example
-- Unit test suite (pytest)

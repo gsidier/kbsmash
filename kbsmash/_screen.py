@@ -162,6 +162,7 @@ class ScreenBuffer:
             self.put(x, y + i, char, fg, bg)
 
     def draw(self):
+        self._terminal.begin_frame()
         for y in range(self._height):
             for x in range(self._width):
                 cell = self._buf[y][x]
@@ -171,8 +172,8 @@ class ScreenBuffer:
                 char, fg, bg = cell
                 tx = self._tx(x)
                 if self._mode == EMOJI and char == " ":
-                    self._terminal.write_char(tx, y, "  ", fg, bg)
+                    self._terminal.queue_char(tx, y, "  ", fg, bg)
                 else:
-                    self._terminal.write_char(tx, y, char, fg, bg)
-        self._terminal.refresh()
+                    self._terminal.queue_char(tx, y, char, fg, bg)
+        self._terminal.end_frame()
         self._prev = [row[:] for row in self._buf]

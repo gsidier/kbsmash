@@ -47,6 +47,7 @@ stop()
 - **Input** — simple `get_key()` or held-key tracking with `update_keys()` + `key_down()` + `key_pressed()`
 - **Input backends** — pynput for arcade-feel key handling (no OS repeat delay), or curses for portability
 - **FPS regulation** — fixed frame rate or unlimited, with `dt()` for smooth movement
+- **Flicker-free rendering** — frames are batched into a single write and wrapped in DEC mode 2026 (Synchronized Output) so supporting terminals apply each frame atomically
 
 ## Examples
 

@@ -64,9 +64,15 @@ def _enable_windows_vt():
 
 
 class Terminal:
-    def __init__(self):
+    def __init__(self, vsync=True):
         self._scr = None
         self._started = False
+        self._vsync = vsync
+        self._frame_buf = None
+        self._last_fg = None
+        self._last_bg = None
+        self._last_x = None
+        self._last_y = None
 
     @property
     def started(self):
@@ -130,16 +136,68 @@ class Terminal:
         curses.echo()
         curses.endwin()
 
-    def write_char(self, x, y, char, fg=WHITE, bg=BLACK):
+    def begin_frame(self):
+        """Start a buffered frame.
+
+        Output is queued in-memory until end_frame() is called, then flushed
+        to stdout in one write. The frame is wrapped in DEC private mode 2026
+        (Synchronized Output) when vsync is enabled, which eliminates flicker
+        on supporting terminals (iTerm2, kitty, WezTerm, Windows Terminal,
+        modern xterm). Non-supporting terminals ignore the escape silently.
+        """
         if not self._started:
             return
-        # ANSI cursor position is 1-indexed: ESC[row;colH
-        sys.stdout.write(
-            f"\x1b[{y + 1};{x + 1}H"
-            f"\x1b[{_fg_code(fg)};{_bg_code(bg)}m"
-            f"{char}"
-            f"\x1b[0m"
-        )
+        self._frame_buf = []
+        self._last_fg = None
+        self._last_bg = None
+        self._last_x = None
+        self._last_y = None
+        if self._vsync:
+            self._frame_buf.append("\x1b[?2026h\x1b[?25l")
+
+    def queue_char(self, x, y, char, fg=WHITE, bg=BLACK):
+        """Append a char to the current frame buffer.
+
+        Skips redundant SGR escapes when the color hasn't changed since the
+        previous cell in this frame, and skips the CUP (cursor-position)
+        escape when writing to a cell immediately after the last one. Both
+        optimizations keep the byte stream tight on large frames.
+        """
+        if not self._started or self._frame_buf is None:
+            return
+        buf = self._frame_buf
+        # Cursor positioning — skip if we're already at (x, y).
+        if self._last_x != x or self._last_y != y:
+            buf.append(f"\x1b[{y + 1};{x + 1}H")
+        # Color — skip if unchanged from the previous cell in this frame.
+        if fg != self._last_fg or bg != self._last_bg:
+            buf.append(f"\x1b[{_fg_code(fg)};{_bg_code(bg)}m")
+            self._last_fg = fg
+            self._last_bg = bg
+        buf.append(char)
+        # Advance the cursor tracker by the width of what we just wrote.
+        # Two-char strings in emoji-mode spaces ("  ") advance 2 columns.
+        self._last_x = x + len(char)
+        self._last_y = y
+
+    def end_frame(self):
+        """Flush the queued frame to stdout in a single write."""
+        if not self._started or self._frame_buf is None:
+            return
+        self._frame_buf.append("\x1b[0m")
+        if self._vsync:
+            self._frame_buf.append("\x1b[?2026l")
+        sys.stdout.write("".join(self._frame_buf))
+        sys.stdout.flush()
+        self._frame_buf = None
+
+    def write_char(self, x, y, char, fg=WHITE, bg=BLACK):
+        """Compatibility wrapper: emit a single char as its own frame."""
+        if not self._started:
+            return
+        self.begin_frame()
+        self.queue_char(x, y, char, fg, bg)
+        self.end_frame()
 
     def refresh(self):
         if self._started:

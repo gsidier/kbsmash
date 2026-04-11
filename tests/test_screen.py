@@ -293,6 +293,15 @@ def test_vline_emoji_requires_char():
 
 # --- draw() ---
 
+def test_draw_calls_begin_end_frame_exactly_once():
+    term = FakeTerminal()
+    s = ScreenBuffer(3, 2, term, mode=ASCII)
+    s.put(1, 0, "X")
+    s.draw()
+    assert term.frames_begun == 1
+    assert term.frames_ended == 1
+
+
 def test_draw_writes_only_diffed_cells():
     term = FakeTerminal()
     s = ScreenBuffer(3, 2, term, mode=ASCII)
