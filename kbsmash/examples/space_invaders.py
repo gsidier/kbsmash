@@ -1,4 +1,5 @@
 import kbsmash
+import random
 
 char_invader = "👾"
 char_saucer = "🛸"
@@ -8,13 +9,35 @@ char_zap = "⚡"
 char_explosion = "💥"
 
 
+screen_width = 50
+screen_height = 40
+
+wave_width = 40
+wave_height = 4
+
+game_area_left = 0
+game_area_right = screen_width - 1
+game_area_bottom = screen_height - 4
+game_area_top = 0
+status_area_y = screen_height - 2
+score_x = 5
+score_y = status_area_y
+player_lives_x = game_area_right - 10
+player_lives_y = status_area_y
+
+wave_speed = .1
+wave_direction = +1
+
 class Invader:
+
+    ZAP_PROBABILITY = 0.001
 
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.state = 'alive'
-        self.explosion_timer = 10
+        self.explosion_timer = 0
+        self.score = 0
 
     def draw(self):
         if self.state == 'alive':
@@ -29,10 +52,56 @@ class Invader:
     def update(self):
         if self.state == 'hit':
             self.explosion_timer -= 1
-        if self.explosion_timer <= 0:
-            self.state = 'dead'
-            wave.remove(self)
+            if self.explosion_timer <= 0:
+                self.state = 'dead'
+                wave.remove(self)
+
+        if self.alive() and random.random() <= Invader.ZAP_PROBABILITY:
+            enemy_zaps.add(EnemyZap(round(self.x), round(self.y+1)))
+
+    def alive(self):
+        return self.state == 'alive'
     
+
+class Player:
+
+    START_LIVES = 3
+    START_X = (game_area_left + game_area_right) // 2
+    START_Y = game_area_bottom - 1
+
+    def __init__(self):
+        self.x = Player.START_X
+        self.y = Player.START_Y
+        self.speed = 1
+        self.lives = Player.START_LIVES
+        self.state = 'alive'
+        self.score = 0
+        self.explosion_timer = 0
+    
+    def draw(self):
+        if self.state == 'alive':
+            kbsmash.put(round(self.x), round(self.y), char_player)
+        elif self.state == 'hit':
+           kbsmash.put(round(self.x), round(self.y), char_explosion)
+    
+    def hit(self):
+        self.state = 'hit'
+        self.explosion_timer = 10
+
+    def update(self):
+        if self.state == 'hit':
+            self.explosion_timer -= 1
+        if self.explosion_timer <= 0:
+            self.lives -= 1
+            if self.lives > 0:
+                self.x = Player.START_X
+                self.y = Player.START_Y
+                self.state = 'alive'
+            else:
+                self.state = 'dead'
+
+    def alive(self):
+        return self.state == 'alive'    
 
 
 class Shield:
@@ -77,20 +146,22 @@ class Bullet:
         return self.y >= 0
 
 
-width = 50
-height = 40
+class EnemyZap:
 
-wave_width = 40
-wave_height = 4
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
-game_area_left = 0
-game_area_right = width - 1
-game_area_bottom = height - 1
-game_area_top = 0
+    def move(self):
+        self.y += 1
+
+    def draw(self):
+        kbsmash.put(self.x, self.y, char_zap)
+    
+    def alive(self):
+        return self.y <= game_area_bottom
 
 
-wave_speed = .1
-wave_direction = +1
 
 def create_wave(startx, starty, wave_width, wave_height):
     wave = set()
@@ -130,18 +201,28 @@ def move_wave(wave):
 def handle_collisions():
     for bullet in [*bullets]:
         for invader in [*wave]:
-            if (round(bullet.x), round(bullet.y)) == (round(invader.x), round(invader.y)):
+            if invader.alive() and (round(bullet.x), round(bullet.y)) == (round(invader.x), round(invader.y)):
                 invader.hit()
+                player.score += 100
                 bullets.remove(bullet)
         
         for shield in [*shields]:
             if (round(bullet.x), round(bullet.y)) == (round(shield.x), round(shield.y)):
                 shield.hit()
                 bullets.remove(bullet)
+    
+    for zap in [*enemy_zaps]:
+        for shield in [*shields]:
+            if (round(zap.x), round(zap.y)) == (round(shield.x), round(shield.y)):
+                shield.hit()
+                enemy_zaps.remove(zap)
+
+        if (round(zap.x), round(zap.y)) == (round(player.x), round(player.y)): 
+            player.hit()
 
 kbsmash.start(
-    width=width, 
-    height=height, 
+    width=screen_width, 
+    height=screen_height, 
     fps=15, 
     title="Space Invaders", 
     mode="emoji")
@@ -168,52 +249,60 @@ while True:
         break
 
     alive = True
-    player_x = width // 2
-    player_y = game_area_bottom - 1
-    player_speed = 1
+    player = Player()
     score = 0
 
     wave = create_wave(startx=1, starty=1, wave_width=wave_width, wave_height=wave_height)
-    shields = create_shields(player_y - 2, shield_width=2, shield_spacing=6)
+    shields = create_shields(player.y - 2, shield_width=2, shield_spacing=6)
     bullets = set()
+    enemy_zaps = set()
 
     while alive: # game loop
 
-        # Move 
+        # Move and update sprites
 
         for bullet in [*bullets]:
             bullet.move()
         
-        # Move invaders
         move_wave(wave)
         for invader in [*wave]:
             invader.update()
 
+        for zap in enemy_zaps:
+            zap.move()
+
+
+        # Handle collisions
         handle_collisions()
         
-        
+        # Handle input
         kbsmash.update_keys()
         if kbsmash.key_down(kbsmash.KEY_LEFT):
-            if player_x - player_speed >= game_area_left:
-                player_x -= player_speed
+            if player.x - player.speed >= game_area_left:
+                player.x -= player.speed
         if kbsmash.key_down(kbsmash.KEY_RIGHT):
-            if player_x + player_speed <= game_area_right:
-                player_x += player_speed
+            if player.x + player.speed <= game_area_right:
+                player.x += player.speed
 
         if kbsmash.key_pressed(kbsmash.KEY_SPACE):
             # shoot
-            bullets.add(Bullet(x=player_x, y=player_y-1))
+            bullets.add(Bullet(x=player.x, y=player.y-1))
         if kbsmash.key_pressed(kbsmash.KEY_ESCAPE):
             break
 
-        #
+        # Draw the screen
         kbsmash.clear()
         #kbsmash.fill(0, 0, width, height, "🌌")
-        kbsmash.put(x=player_x, y=player_y, char=char_player)
+        player.draw()
         for invader in wave:
             invader.draw()
         for shield in shields:
             shield.draw()
         for bullet in bullets:
             bullet.draw()
+        for zap in enemy_zaps:
+            zap.draw()
+        kbsmash.text(score_x, score_y, str(player.score), fg=kbsmash.GREEN)
+        for i in range(player.lives - 1):
+            kbsmash.put(player_lives_x + i*2, player_lives_y, char_player)
         kbsmash.draw()
