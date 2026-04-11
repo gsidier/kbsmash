@@ -5,7 +5,7 @@ class Pong(Game):
     def __init__(self):
         super().__init__(60, 24, fps=30, title="Pong", debounce=0.05, mode="emoji")
         self.paddle_y = 10
-        self.ball_x, self.ball_y = 30, 12
+        self.ball_x, self.ball_y = self.width // 2, self.height // 2
         self.ball_dx, self.ball_dy = 1, 1
         self.score = 0
 
