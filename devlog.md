@@ -13,6 +13,34 @@ Implemented core engine (Phase 1-3 from spec):
 
 Examples: bouncing_ball.py (function API), snake.py (function API), pong.py (class API).
 
+## 2026-04-11 — Gamepad support
+
+- New `_gamepad.py` module exposing `GamepadState`, backed by the `inputs`
+  library (optional extra: `uv sync --extra gamepad`).
+- Public API mirrors the keyboard: `button_down()`, `button_pressed()`,
+  `buttons_down()` for digital buttons, plus `stick(which)` returning
+  `(x, y)` in `[-1, 1]` and `trigger(which)` returning `[0, 1]`. Dead-zone
+  default 0.15.
+- Button constants: `BUTTON_A/B/X/Y`, `BUTTON_L1/R1/L3/R3`,
+  `BUTTON_START/SELECT/HOME`, `DPAD_UP/DOWN/LEFT/RIGHT`, plus
+  `STICK_LEFT/RIGHT` and `TRIGGER_LEFT/RIGHT` aliases.
+- Internally maps evdev-style codes (`BTN_SOUTH`, `BTN_TL`, `ABS_X`, `ABS_Z`,
+  `ABS_HAT0X`, etc.) to the public constants. D-pad is supported both as a
+  hat axis and as discrete buttons (different controllers report it
+  differently).
+- Polling happens in a daemon thread; `update_keys()` on `Game` also calls
+  `GamepadState.update()` to snapshot edge-triggered presses per frame.
+- Hot-plug supported: the poll loop retries after `get_gamepad()` raises
+  so a controller connected mid-game just starts working.
+- Opt-in via `gamepad=True` on `start()` / `Game.__init__()`. When off (the
+  default), all gamepad queries return safe defaults so games can call them
+  unconditionally without crashing.
+- 18 new unit tests covering button edge/held, dpad as hat-axis and as
+  discrete buttons, stick normalization + dead-zone, triggers, and unknown
+  codes. Tests bypass `__init__` so the `inputs` library is not required
+  to run them.
+- New example: `kbsmash/examples/gamepad_demo.py`.
+
 ## 2026-04-11 — Flicker-free rendering
 
 - `Terminal` now exposes a 3-phase frame API: `begin_frame()` / `queue_char()` /

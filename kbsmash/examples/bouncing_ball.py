@@ -1,14 +1,14 @@
 from kbsmash import *
 
-start(40, 20, fps=30, title="Bouncing Ball")
+start(40, 20, fps=30, title="Bouncing Ball", gamepad=True)
 
 x, y = 20, 10
 dx, dy = 1, 1
 running = True
 
 while running:
-    key = get_key()
-    if key == KEY_ESCAPE:
+    update_keys()
+    if key_pressed(KEY_ESCAPE) or button_pressed(BUTTON_START):
         running = False
 
     x += dx

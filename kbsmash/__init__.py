@@ -2,6 +2,7 @@
 from kbsmash._functions import (
     start, stop, clear, put, text, rect, fill, hline, vline,
     draw, get_key, update_keys, key_down, key_pressed, keys_down,
+    button_down, button_pressed, buttons_down, stick, trigger,
     screen_width, screen_height, dt,
 )
 
@@ -26,3 +27,12 @@ from kbsmash._screen import ASCII, EMOJI
 
 # Color style helper
 from kbsmash._screen import color
+
+# Gamepad constants
+from kbsmash._gamepad import (
+    BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y,
+    BUTTON_L1, BUTTON_R1, BUTTON_L3, BUTTON_R3,
+    BUTTON_START, BUTTON_SELECT, BUTTON_HOME,
+    DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT,
+    STICK_LEFT, STICK_RIGHT, TRIGGER_LEFT, TRIGGER_RIGHT,
+)

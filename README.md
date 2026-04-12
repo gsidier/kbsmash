@@ -46,6 +46,7 @@ stop()
 - **Colors** — 16 named colors with fg/bg, reusable `color()` styles
 - **Input** — simple `get_key()` or held-key tracking with `update_keys()` + `key_down()` + `key_pressed()`
 - **Input backends** — pynput for arcade-feel key handling (no OS repeat delay), or curses for portability
+- **Gamepad support** — optional (`uv sync --extra gamepad`) — digital buttons, D-pad, analog sticks, and triggers
 - **FPS regulation** — fixed frame rate or unlimited, with `dt()` for smooth movement
 - **Flicker-free rendering** — frames are batched into a single write and wrapped in DEC mode 2026 (Synchronized Output) so supporting terminals apply each frame atomically
 
@@ -55,6 +56,7 @@ stop()
 - `kbsmash/examples/snake.py` — function API, ASCII mode
 - `kbsmash/examples/snake_emoji.py` — function API, emoji mode
 - `kbsmash/examples/pong.py` — class API with pynput input
+- `kbsmash/examples/gamepad_demo.py` — gamepad input (buttons, sticks, triggers)
 
 Run one:
 
