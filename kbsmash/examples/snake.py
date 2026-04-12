@@ -10,12 +10,15 @@ score = 0
 alive = True
 
 while alive:
-    key = get_key()
-    if key == KEY_UP:      direction = (0, -1)
-    elif key == KEY_DOWN:  direction = (0, 1)
-    elif key == KEY_LEFT:  direction = (-1, 0)
-    elif key == KEY_RIGHT: direction = (1, 0)
-    elif key == KEY_ESCAPE: break
+    update_keys()
+    if key_pressed(KEY_ESCAPE) or button_pressed(BUTTON_START): break
+
+    # Keyboard arrows OR D-pad OR left analog stick
+    sx, sy = stick(STICK_LEFT)
+    if   key_pressed(KEY_UP)    or button_pressed(DPAD_UP)    or sy < -0.5: direction = (0, -1)
+    elif key_pressed(KEY_DOWN)  or button_pressed(DPAD_DOWN)  or sy >  0.5: direction = (0, 1)
+    elif key_pressed(KEY_LEFT)  or button_pressed(DPAD_LEFT)  or sx < -0.5: direction = (-1, 0)
+    elif key_pressed(KEY_RIGHT) or button_pressed(DPAD_RIGHT) or sx >  0.5: direction = (1, 0)
 
     head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
 

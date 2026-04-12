@@ -42,3 +42,16 @@ def test_import_public_api():
 
     # Style helper
     assert callable(kbsmash.color)
+
+    # Gamepad API
+    assert callable(kbsmash.button_down)
+    assert callable(kbsmash.button_pressed)
+    assert callable(kbsmash.buttons_down)
+    assert callable(kbsmash.stick)
+    assert callable(kbsmash.trigger)
+
+    # Gamepad constants
+    assert kbsmash.BUTTON_A == "BUTTON_A"
+    assert kbsmash.DPAD_UP == "DPAD_UP"
+    assert kbsmash.STICK_LEFT == "left"
+    assert kbsmash.TRIGGER_RIGHT == "right"

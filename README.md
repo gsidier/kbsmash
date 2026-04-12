@@ -46,6 +46,7 @@ stop()
 - **Colors** — 16 named colors with fg/bg, reusable `color()` styles
 - **Input** — simple `get_key()` or held-key tracking with `update_keys()` + `key_down()` + `key_pressed()`
 - **Input backends** — pynput for arcade-feel key handling (no OS repeat delay), or curses for portability
+- **Gamepad support** — enabled by default, works with Xbox/PlayStation controllers (requires `uv sync --extra gamepad` for the `pygame` dependency)
 - **FPS regulation** — fixed frame rate or unlimited, with `dt()` for smooth movement
 - **Flicker-free rendering** — frames are batched into a single write and wrapped in DEC mode 2026 (Synchronized Output) so supporting terminals apply each frame atomically
 
@@ -55,6 +56,7 @@ stop()
 - `kbsmash/examples/snake.py` — function API, ASCII mode
 - `kbsmash/examples/snake_emoji.py` — function API, emoji mode
 - `kbsmash/examples/pong.py` — class API with pynput input
+- `kbsmash/examples/gamepad_demo.py` — gamepad input (buttons, sticks, triggers)
 
 Run one:
 
@@ -245,7 +247,7 @@ text(0, 0, "Score: 42", style=hud)
 import random
 from kbsmash import *
 
-start(40, 15, fps=20, input="pynput", debounce=0.05)
+start(40, 15, fps=20, debounce=0.05)
 
 player_x = 20
 obstacles = []  # list of [x, y]
@@ -254,10 +256,19 @@ alive = True
 
 while alive:
     update_keys()
-    if key_pressed(KEY_ESCAPE):
+    if key_pressed(KEY_ESCAPE) or button_pressed(BUTTON_START):
         break
-    if key_down(KEY_LEFT)  and player_x > 1:  player_x -= 1
-    if key_down(KEY_RIGHT) and player_x < 38: player_x += 1
+
+    # Keyboard or gamepad
+    if key_down(KEY_LEFT) or button_down(DPAD_LEFT):
+        if player_x > 1: player_x -= 1
+    if key_down(KEY_RIGHT) or button_down(DPAD_RIGHT):
+        if player_x < 38: player_x += 1
+
+    # Analog stick
+    sx, _ = stick(STICK_LEFT)
+    if sx < -0.3 and player_x > 1:  player_x -= 1
+    if sx >  0.3 and player_x < 38: player_x += 1
 
     # move existing obstacles down, drop ones that fell off
     for o in obstacles:
@@ -394,6 +405,73 @@ while True:  # outer: loop forever
 A common bug is forgetting to reset `alive = True`, which makes the inner
 loop fall through instantly — the start screen then looks "stuck" but is
 actually cycling through zero-length games.
+
+### 11. Gamepad support
+
+Gamepad support is enabled by default — Xbox and PlayStation controllers just
+work. If no controller is connected, all gamepad calls return safe defaults so
+your code doesn't need `if` guards.
+
+> **Dependency:** `uv sync --extra gamepad` installs `pygame`, which provides
+> the controller backend. Without it, gamepad calls silently return defaults.
+
+Gamepad input uses the same `update_keys()` call you already have. Buttons
+work like keys — `button_down()` for held, `button_pressed()` for edge:
+
+```python
+from kbsmash import *
+
+start(40, 15, fps=20, input="pynput")
+
+x, y = 20, 7
+
+while True:
+    update_keys()
+    if key_pressed(KEY_ESCAPE) or button_pressed(BUTTON_START):
+        break
+
+    # D-pad (digital)
+    if button_down(DPAD_LEFT):  x -= 1
+    if button_down(DPAD_RIGHT): x += 1
+    if button_down(DPAD_UP):    y -= 1
+    if button_down(DPAD_DOWN):  y += 1
+
+    # Left stick (analog) — (x, y) floats in [-1, 1]
+    sx, sy = stick(STICK_LEFT)
+    if sx < -0.3: x -= 1
+    if sx >  0.3: x += 1
+
+    # Face buttons
+    if button_pressed(BUTTON_A):
+        pass  # fire, jump, confirm...
+
+    # Triggers — float in [0, 1]
+    boost = trigger(TRIGGER_RIGHT)
+
+    clear()
+    put(x, y, "@", fg=YELLOW)
+    draw()
+
+stop()
+```
+
+**Button constants:**
+
+| Constant | What |
+|---|---|
+| `BUTTON_A`, `B`, `X`, `Y` | Face buttons (A = south) |
+| `BUTTON_L1`, `R1` | Shoulder bumpers |
+| `BUTTON_L3`, `R3` | Stick clicks |
+| `BUTTON_START`, `SELECT`, `HOME` | Menu buttons |
+| `DPAD_UP`, `DOWN`, `LEFT`, `RIGHT` | D-pad |
+| `STICK_LEFT`, `STICK_RIGHT` | For `stick()` |
+| `TRIGGER_LEFT`, `TRIGGER_RIGHT` | For `trigger()` |
+
+To disable gamepad (e.g. to avoid the pygame import), pass `gamepad=False`:
+
+```python
+start(40, 20, gamepad=False)
+```
 
 ### Reference
 
