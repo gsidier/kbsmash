@@ -46,7 +46,7 @@ stop()
 - **Colors** — 16 named colors with fg/bg, reusable `color()` styles
 - **Input** — simple `get_key()` or held-key tracking with `update_keys()` + `key_down()` + `key_pressed()`
 - **Input backends** — pynput for arcade-feel key handling (no OS repeat delay), or curses for portability
-- **Gamepad support** — enabled by default, works with Xbox/PlayStation controllers (requires `uv sync --extra gamepad` for the `pygame` dependency)
+- **Gamepad support** — enabled by default, works with Xbox/PlayStation controllers via pygame
 - **FPS regulation** — fixed frame rate or unlimited, with `dt()` for smooth movement
 - **Flicker-free rendering** — frames are batched into a single write and wrapped in DEC mode 2026 (Synchronized Output) so supporting terminals apply each frame atomically
 
@@ -412,8 +412,8 @@ Gamepad support is enabled by default — Xbox and PlayStation controllers just
 work. If no controller is connected, all gamepad calls return safe defaults so
 your code doesn't need `if` guards.
 
-> **Dependency:** `uv sync --extra gamepad` installs `pygame`, which provides
-> the controller backend. Without it, gamepad calls silently return defaults.
+`pygame` is installed automatically with kbsmash and provides the controller
+backend.
 
 Gamepad input uses the same `update_keys()` call you already have. Buttons
 work like keys — `button_down()` for held, `button_pressed()` for edge:

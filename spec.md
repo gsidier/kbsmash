@@ -10,7 +10,7 @@ A minimal Python engine for building terminal-based arcade games, designed to te
 2. **No hidden magic** — the student writes the game loop, controls the flow
 3. **Two API flavors** — function-based (beginners) → class-based (intermediate)
 4. **Modern terminals** — color, emoji "sprites", box-drawing characters
-5. **Zero dependencies** — stdlib only (`curses`, `sys`, `os`, `time`, `enum`)
+5. **Minimal dependencies** — `pynput` for keyboard hooks, `pygame` for gamepad
 
 ---
 
@@ -230,11 +230,8 @@ elif key == "q":
 
 ### Gamepad
 
-Gamepad support is enabled by default (requires `pygame` for the backend).
-
-```bash
-uv sync --extra gamepad
-```
+Gamepad support is enabled by default. `pygame` is a standard dependency and
+provides the controller backend.
 
 ```python
 start(60, 24, input="pynput")
@@ -285,9 +282,9 @@ stick(which)             # (x, y) in [-1, 1], dead-zoned
 trigger(which)           # 0..1
 ```
 
-When `gamepad=False` or `pygame` is not installed, all gamepad queries
-return safe defaults (`False`, empty set, `(0, 0)`, `0.0`) so games can
-call them unconditionally without crashing.
+When `gamepad=False`, all gamepad queries return safe defaults (`False`,
+empty set, `(0, 0)`, `0.0`) so games can call them unconditionally without
+crashing.
 
 ---
 

@@ -17,8 +17,8 @@
   `trigger()`, and all button constants. Section 7 (dodge game) updated with
   gamepad controls.
 - spec.md: gamepad section updated to reference pygame instead of inputs.
-- Optional dependency changed from `inputs>=0.5` to `pygame>=2.1` in
-  `pyproject.toml`.
+- `pygame>=2.1` is now a standard dependency (moved from optional extra to
+  `dependencies` in `pyproject.toml`).
 
 ## 2026-04-03 — Initial implementation
 
