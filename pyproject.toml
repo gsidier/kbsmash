@@ -17,6 +17,9 @@ dependencies = [
     "windows-curses>=2.3; sys_platform == 'win32'",
 ]
 
+[project.optional-dependencies]
+gamepad = ["pygame>=2.1"]
+
 [dependency-groups]
 dev = [
     "pytest>=7",

@@ -1,5 +1,25 @@
 # Dev Log
 
+## 2026-04-05 — Gamepad: pygame backend, enabled by default
+
+- Switched gamepad backend from `inputs` to `pygame` (SDL2). The `inputs`
+  library uses raw IOKit paths on macOS that don't see Bluetooth HID devices,
+  so Bluetooth Xbox/PlayStation controllers were invisible. `pygame`'s SDL2
+  GameController layer has first-class support for Bluetooth controllers on
+  macOS, Windows, and Linux.
+- No background thread needed: `update_keys()` calls `pygame.event.pump()`
+  directly. SDL is initialized headlessly via `SDL_VIDEODRIVER=dummy` so no
+  window is created.
+- Changed `gamepad=True` to be the default on `start()` / `Game.__init__()`.
+  All example games updated to remove the now-redundant `gamepad=True` kwarg.
+- README: added section 11 (Gamepad support) to the tutorial with a full
+  example covering `button_down()`, `button_pressed()`, `stick()`,
+  `trigger()`, and all button constants. Section 7 (dodge game) updated with
+  gamepad controls.
+- spec.md: gamepad section updated to reference pygame instead of inputs.
+- Optional dependency changed from `inputs>=0.5` to `pygame>=2.1` in
+  `pyproject.toml`.
+
 ## 2026-04-03 — Initial implementation
 
 Implemented core engine (Phase 1-3 from spec):
@@ -12,6 +32,34 @@ Implemented core engine (Phase 1-3 from spec):
 - `__init__.py` — clean exports of both APIs, all constants
 
 Examples: bouncing_ball.py (function API), snake.py (function API), pong.py (class API).
+
+## 2026-04-11 — Gamepad support
+
+- New `_gamepad.py` module exposing `GamepadState`, backed by the `inputs`
+  library (optional extra: `uv sync --extra gamepad`).
+- Public API mirrors the keyboard: `button_down()`, `button_pressed()`,
+  `buttons_down()` for digital buttons, plus `stick(which)` returning
+  `(x, y)` in `[-1, 1]` and `trigger(which)` returning `[0, 1]`. Dead-zone
+  default 0.15.
+- Button constants: `BUTTON_A/B/X/Y`, `BUTTON_L1/R1/L3/R3`,
+  `BUTTON_START/SELECT/HOME`, `DPAD_UP/DOWN/LEFT/RIGHT`, plus
+  `STICK_LEFT/RIGHT` and `TRIGGER_LEFT/RIGHT` aliases.
+- Internally maps evdev-style codes (`BTN_SOUTH`, `BTN_TL`, `ABS_X`, `ABS_Z`,
+  `ABS_HAT0X`, etc.) to the public constants. D-pad is supported both as a
+  hat axis and as discrete buttons (different controllers report it
+  differently).
+- Polling happens in a daemon thread; `update_keys()` on `Game` also calls
+  `GamepadState.update()` to snapshot edge-triggered presses per frame.
+- Hot-plug supported: the poll loop retries after `get_gamepad()` raises
+  so a controller connected mid-game just starts working.
+- Opt-in via `gamepad=True` on `start()` / `Game.__init__()`. When off (the
+  default), all gamepad queries return safe defaults so games can call them
+  unconditionally without crashing.
+- 18 new unit tests covering button edge/held, dpad as hat-axis and as
+  discrete buttons, stick normalization + dead-zone, triggers, and unknown
+  codes. Tests bypass `__init__` so the `inputs` library is not required
+  to run them.
+- New example: `kbsmash/examples/gamepad_demo.py`.
 
 ## 2026-04-11 — Flicker-free rendering
 

@@ -5,7 +5,7 @@ from kbsmash._timing import Timer
 
 
 class Game:
-    def __init__(self, width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput", vsync=True):
+    def __init__(self, width=40, height=20, fps=30, title="", mode="emoji", debounce=0, input="pynput", vsync=True, gamepad=True):
         self._width = width
         self._height = height
         self._fps = fps
@@ -14,10 +14,12 @@ class Game:
         self._debounce = debounce
         self._input = input
         self._vsync = vsync
+        self._gamepad_enabled = gamepad
         self._terminal = None
         self._screen = None
         self._timer = None
         self._keys = None
+        self._gamepad = None
 
     def start(self):
         self._terminal = Terminal(vsync=self._vsync)
@@ -31,8 +33,13 @@ class Game:
             self._keys = KeyState(debounce=self._debounce)
         else:
             raise ValueError(f"input must be 'curses' or 'pynput', got {self._input!r}")
+        if self._gamepad_enabled:
+            from kbsmash._gamepad import GamepadState
+            self._gamepad = GamepadState()
 
     def stop(self):
+        if self._gamepad is not None:
+            self._gamepad.stop()
         if self._keys is not None and hasattr(self._keys, "stop"):
             self._keys.stop()
         if self._terminal:
@@ -80,6 +87,8 @@ class Game:
 
     def update_keys(self):
         self._keys.update(self._terminal)
+        if self._gamepad is not None:
+            self._gamepad.update()
 
     def key_down(self, key):
         return self._keys.is_down(key)
@@ -89,6 +98,29 @@ class Game:
 
     def keys_down(self):
         return self._keys.keys_down()
+
+    # --- Gamepad ---
+
+    def button_down(self, button):
+        return self._gamepad is not None and self._gamepad.button_down(button)
+
+    def button_pressed(self, button):
+        return self._gamepad is not None and self._gamepad.button_pressed(button)
+
+    def buttons_down(self):
+        if self._gamepad is None:
+            return frozenset()
+        return self._gamepad.buttons_down()
+
+    def stick(self, which):
+        if self._gamepad is None:
+            return (0.0, 0.0)
+        return self._gamepad.stick(which)
+
+    def trigger(self, which):
+        if self._gamepad is None:
+            return 0.0
+        return self._gamepad.trigger(which)
 
     # --- Info ---
 

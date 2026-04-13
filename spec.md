@@ -228,6 +228,67 @@ elif key == "q":
     running = False
 ```
 
+### Gamepad
+
+Gamepad support is enabled by default (requires `pygame` for the backend).
+
+```bash
+uv sync --extra gamepad
+```
+
+```python
+start(60, 24, input="pynput")
+
+while True:
+    update_keys()                # polls keyboard AND gamepad
+    if key_pressed(KEY_ESCAPE): break
+
+    # Digital buttons — same edge/held semantics as keys
+    if button_pressed(BUTTON_A): fire()
+    if button_down(DPAD_LEFT):   player_x -= 1
+
+    # Analog sticks — (x, y) floats in [-1, 1], y is positive-down
+    sx, sy = stick(STICK_LEFT)
+    player_x += sx
+    player_y += sy
+
+    # Triggers — float in [0, 1]
+    thrust = trigger(TRIGGER_RIGHT)
+
+    draw()
+```
+
+`update_keys()` calls `pygame.event.pump()` and snapshots button/axis state
+for the frame. Hot-plugging is supported — `pygame.joystick.get_count()` is
+checked each frame, so a gamepad connected mid-game just starts working.
+
+**Button constants** (mapped to both Xbox and PlayStation layouts — the code
+`BUTTON_A` is the south face button regardless of label):
+
+```python
+BUTTON_A, BUTTON_B, BUTTON_X, BUTTON_Y      # face buttons
+BUTTON_L1, BUTTON_R1                         # shoulder bumpers
+BUTTON_L3, BUTTON_R3                         # stick clicks
+BUTTON_START, BUTTON_SELECT, BUTTON_HOME     # menu buttons
+DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT    # hat / dpad (discrete)
+STICK_LEFT, STICK_RIGHT                      # for stick("left"|"right")
+TRIGGER_LEFT, TRIGGER_RIGHT                  # for trigger("left"|"right")
+```
+
+**API**:
+
+```python
+button_down(button)      # True if button is held this frame
+button_pressed(button)   # True only on the frame the button was first pressed
+buttons_down()           # frozenset of all held buttons (digital + dpad)
+stick(which)             # (x, y) in [-1, 1], dead-zoned
+trigger(which)           # 0..1
+```
+
+When `gamepad=False` or `pygame` is not installed, all gamepad queries
+return safe defaults (`False`, empty set, `(0, 0)`, `0.0`) so games can
+call them unconditionally without crashing.
+
 ---
 
 ## Drawing Primitives

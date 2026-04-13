@@ -1,9 +1,13 @@
-from kbsmash import Game, KEY_UP, KEY_DOWN, KEY_ESCAPE, WHITE, YELLOW
+from kbsmash import (
+    Game, KEY_UP, KEY_DOWN, KEY_ESCAPE, WHITE, YELLOW,
+    DPAD_UP, DPAD_DOWN, BUTTON_START, STICK_LEFT,
+)
 
 
 class Pong(Game):
     def __init__(self):
-        super().__init__(60, 24, fps=30, title="Pong", debounce=0.05, mode="emoji")
+        super().__init__(60, 24, fps=30, title="Pong", debounce=0.05,
+                         mode="emoji")
         self.paddle_y = 10
         self.ball_x, self.ball_y = self.width // 2, self.height // 2
         self.ball_dx, self.ball_dy = 1, 1
@@ -15,11 +19,18 @@ pong = Pong()
 with pong:
     while True:
         pong.update_keys()
-        if pong.key_pressed(KEY_ESCAPE):
+        if pong.key_pressed(KEY_ESCAPE) or pong.button_pressed(BUTTON_START):
             break
-        if pong.key_down(KEY_UP) and pong.paddle_y > 0:
+
+        up = pong.key_down(KEY_UP) or pong.button_down(DPAD_UP)
+        down = pong.key_down(KEY_DOWN) or pong.button_down(DPAD_DOWN)
+        _, sy = pong.stick(STICK_LEFT)
+        if sy < -0.3: up = True
+        if sy >  0.3: down = True
+
+        if up and pong.paddle_y > 0:
             pong.paddle_y -= 1
-        if pong.key_down(KEY_DOWN) and pong.paddle_y < pong.height - 5:
+        if down and pong.paddle_y < pong.height - 5:
             pong.paddle_y += 1
 
         pong.ball_x += pong.ball_dx
