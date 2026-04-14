@@ -14,6 +14,10 @@ BOX_BOTTOM_RIGHT = "┘"
 BOX_HORIZONTAL = "─"
 BOX_VERTICAL = "│"
 
+# Continuation marker — placed in the cell after a wide char in ASCII mode
+# so draw() knows to skip it (the wide char already covers that column).
+_CONT = ""
+
 
 class Style:
     __slots__ = ("fg", "bg")
@@ -31,6 +35,25 @@ def _is_wide(ch):
     if len(ch) > 1:
         return True
     return unicodedata.east_asian_width(ch) in ("W", "F")
+
+
+def text_width(string, mode=ASCII):
+    """Return the width of *string* in screen cells, rounded up.
+
+    In emoji mode narrow chars count as 0.5 cells each (packed two per cell)
+    and wide chars count as 1.  In ASCII mode narrow chars are 1 cell and
+    wide chars are 2.
+    """
+    if mode == EMOJI:
+        half = 0
+        for ch in string:
+            half += 2 if _is_wide(ch) else 1
+        return -(-half // 2)  # ceil division
+    else:
+        w = 0
+        for ch in string:
+            w += 2 if _is_wide(ch) else 1
+        return w
 
 
 class ScreenBuffer:
@@ -93,26 +116,51 @@ class ScreenBuffer:
         if style:
             fg = style.fg
             bg = style.bg
+        if y < 0 or y >= self._height:
+            return
         if self._mode == EMOJI:
-            # In emoji mode each cell is 2 terminal columns wide, so we pack
-            # two ASCII chars per cell. This lets text() still be used for
-            # scores, labels, etc. in emoji games.
-            for ch in string:
+            # Walk the string: wide chars take one cell each, narrow chars
+            # are packed two per cell (so scores/labels still fit alongside
+            # emoji sprites).
+            i = 0
+            cx = x
+            while i < len(string):
+                if cx >= self._width:
+                    break
+                ch = string[i]
                 if _is_wide(ch):
-                    raise ValueError(
-                        f"text() in emoji mode expects narrow (ASCII) "
-                        f"characters — got wide char {ch!r}"
-                    )
-            if len(string) % 2 == 1:
-                string = string + " "
-            for i in range(0, len(string), 2):
-                cx = x + i // 2
-                if cx < 0 or cx >= self._width or y < 0 or y >= self._height:
-                    continue
-                self._buf[y][cx] = (string[i:i + 2], fg, bg)
+                    if cx >= 0:
+                        self._buf[y][cx] = (ch, fg, bg)
+                    cx += 1
+                    i += 1
+                else:
+                    pair = ch
+                    if i + 1 < len(string) and not _is_wide(string[i + 1]):
+                        pair += string[i + 1]
+                        i += 2
+                    else:
+                        pair += " "
+                        i += 1
+                    if cx >= 0:
+                        self._buf[y][cx] = (pair, fg, bg)
+                    cx += 1
         else:
-            for i, ch in enumerate(string):
-                self.put(x + i, y, ch, fg, bg)
+            # Walk the string: narrow chars take 1 cell, wide chars take 2
+            # (the second cell gets a continuation marker that draw() skips).
+            cx = x
+            for ch in string:
+                if cx >= self._width:
+                    break
+                if _is_wide(ch):
+                    if cx >= 0:
+                        self._buf[y][cx] = (ch, fg, bg)
+                    if cx + 1 >= 0 and cx + 1 < self._width:
+                        self._buf[y][cx + 1] = (_CONT, fg, bg)
+                    cx += 2
+                else:
+                    if cx >= 0:
+                        self._buf[y][cx] = (ch, fg, bg)
+                    cx += 1
 
     def rect(self, x, y, w, h, char=None, fg=WHITE, bg=BLACK):
         if w < 2 or h < 2:
@@ -170,6 +218,8 @@ class ScreenBuffer:
                 if prev and cell == prev:
                     continue
                 char, fg, bg = cell
+                if char == _CONT:
+                    continue
                 tx = self._tx(x)
                 if self._mode == EMOJI and char == " ":
                     self._terminal.queue_char(tx, y, "  ", fg, bg)

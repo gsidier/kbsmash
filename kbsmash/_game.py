@@ -1,5 +1,5 @@
 from kbsmash._terminal import Terminal, WHITE, BLACK
-from kbsmash._screen import ScreenBuffer
+from kbsmash._screen import ScreenBuffer, text_width as _text_width
 from kbsmash._input import translate_key, KeyState
 from kbsmash._timing import Timer
 
@@ -131,6 +131,9 @@ class Game:
     @property
     def height(self):
         return self._height
+
+    def text_width(self, string):
+        return _text_width(string, self._mode)
 
     def dt(self):
         return self._timer.dt

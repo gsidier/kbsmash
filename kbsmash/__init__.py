@@ -3,7 +3,7 @@ from kbsmash._functions import (
     start, stop, clear, put, text, rect, fill, hline, vline,
     draw, get_key, update_keys, key_down, key_pressed, keys_down,
     button_down, button_pressed, buttons_down, stick, trigger,
-    screen_width, screen_height, dt,
+    screen_width, screen_height, text_width, dt,
 )
 
 # Class-based API

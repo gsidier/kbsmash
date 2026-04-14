@@ -331,10 +331,10 @@ In emoji mode:
 - Only wide characters (emoji, CJK) are allowed in `put()`.
 - `rect()`, `hline()`, `vline()` require an explicit `char=` argument (no
   box-drawing default).
-- `text()` still works — it packs **two ASCII chars per emoji cell**, so
-  `"score"` uses 3 cells (`"sc"`, `"or"`, `"e "`).
-- Putting an ASCII char in emoji mode (or an emoji in ASCII mode) raises
-  `ValueError`.
+- `text()` supports mixed strings — wide chars take one cell each, narrow
+  chars are packed two per cell. `"🍎x5"` uses 2 cells (`"🍎"`, `"x5"`).
+- Putting an ASCII char in emoji mode (or an emoji in ASCII mode) via
+  `put()` raises `ValueError`.
 
 ### 9. Class-based API
 

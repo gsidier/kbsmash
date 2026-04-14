@@ -77,10 +77,11 @@ rect(0, 0, 15, 20)              # ValueError (no default in emoji mode)
 
 Spaces are the one exception — allowed in both modes for `clear()` and `fill()`.
 
-`text()` is also allowed in emoji mode as a special case: it packs two ASCII
-chars per emoji cell, so scores and labels still work. Odd-length strings are
-padded with a trailing space. Passing a wide char to `text()` in emoji mode
-raises `ValueError`.
+`text()` supports mixed-width strings in both modes. In emoji mode, wide chars
+take one cell each while narrow chars are packed two per cell — so
+`text(0, 0, "🍎x5")` writes `"🍎"` in cell 0 and `"x5"` in cell 1. In ASCII
+mode, wide chars take 2 cells each (the second cell is a continuation marker
+that `draw()` skips). Odd-length narrow runs are padded with a trailing space.
 
 ---
 

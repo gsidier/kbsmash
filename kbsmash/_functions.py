@@ -122,6 +122,11 @@ def screen_height():
     return _game.height
 
 
+def text_width(string):
+    _require_started()
+    return _game.text_width(string)
+
+
 def dt():
     _require_started()
     return _game.dt()

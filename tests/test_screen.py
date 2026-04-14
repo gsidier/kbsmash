@@ -1,6 +1,6 @@
 import pytest
 
-from kbsmash._screen import ScreenBuffer, Style, color, _is_wide, ASCII, EMOJI
+from kbsmash._screen import ScreenBuffer, Style, color, text_width, _is_wide, ASCII, EMOJI
 from kbsmash._terminal import WHITE, BLACK, RED, GREEN, YELLOW, BLUE
 from conftest import FakeTerminal
 
@@ -163,10 +163,78 @@ def test_text_emoji_mode_pads_odd_length():
     assert s._buf[0][1] == ("c ", WHITE, BLACK)
 
 
-def test_text_emoji_mode_rejects_wide_chars():
+def test_text_emoji_mode_mixed_wide_and_narrow():
     s = make_screen(mode=EMOJI)
-    with pytest.raises(ValueError, match="wide char"):
-        s.text(0, 0, "x🍎")
+    s.text(0, 0, "🍎x5", fg=RED)
+    assert s._buf[0][0] == ("🍎", RED, BLACK)
+    assert s._buf[0][1] == ("x5", RED, BLACK)
+
+
+def test_text_emoji_mode_wide_then_odd_narrow():
+    s = make_screen(mode=EMOJI)
+    s.text(0, 0, "🍎a")
+    assert s._buf[0][0] == ("🍎", WHITE, BLACK)
+    assert s._buf[0][1] == ("a ", WHITE, BLACK)
+
+
+def test_text_ascii_mode_mixed_wide_and_narrow():
+    from kbsmash._screen import _CONT
+    s = make_screen()
+    s.text(1, 0, "a🍎b", fg=RED)
+    assert s._buf[0][1] == ("a", RED, BLACK)
+    assert s._buf[0][2] == ("🍎", RED, BLACK)
+    assert s._buf[0][3] == (_CONT, RED, BLACK)
+    assert s._buf[0][4] == ("b", RED, BLACK)
+
+
+def test_text_ascii_mode_wide_at_edge_clipped():
+    from kbsmash._screen import _CONT
+    s = make_screen(5, 3)
+    s.text(3, 0, "a🍎b")
+    # 'a' at 3, emoji at 4 (fits), continuation would be at 5 (out of bounds)
+    assert s._buf[0][3] == ("a", WHITE, BLACK)
+    assert s._buf[0][4] == ("🍎", WHITE, BLACK)
+
+
+# --- text_width() ---
+
+def test_text_width_ascii_narrow():
+    assert text_width("hello", ASCII) == 5
+
+
+def test_text_width_ascii_wide():
+    assert text_width("🍎", ASCII) == 2
+
+
+def test_text_width_ascii_mixed():
+    assert text_width("a🍎b", ASCII) == 4
+
+
+def test_text_width_emoji_narrow_even():
+    assert text_width("hi", EMOJI) == 1
+
+
+def test_text_width_emoji_narrow_odd():
+    assert text_width("abc", EMOJI) == 2  # rounded up
+
+
+def test_text_width_emoji_wide():
+    assert text_width("🍎🔥", EMOJI) == 2
+
+
+def test_text_width_emoji_mixed():
+    # "🍎x5" → 🍎 = 2 halves, x = 1 half, 5 = 1 half → 4 halves → 2 cells
+    assert text_width("🍎x5", EMOJI) == 2
+
+
+def test_text_width_emoji_mixed_rounds_up():
+    # "🍎a" → 🍎 = 2 halves, a = 1 half → 3 halves → ceil = 2 cells
+    assert text_width("🍎a", EMOJI) == 2
+
+
+def test_text_width_empty():
+    assert text_width("", ASCII) == 0
+    assert text_width("", EMOJI) == 0
 
 
 def test_text_emoji_mode_clipped():

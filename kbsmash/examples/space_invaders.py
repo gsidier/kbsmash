@@ -124,7 +124,7 @@ class Shield:
         if self.hits < len(Shield.CHARS):
             kbsmash.put(self.x, self.y, self.char)
 
-    def hit(self) -> bool:
+    def hit(self):
         self.hits += 1
         if not self.alive():
             if self in shields:
@@ -253,7 +253,10 @@ while True:
             break
 
         kbsmash.clear()
-        kbsmash.text(4, 9, "Smash space or A to start (esc exits)", fg=kbsmash.GREEN)
+        txt = "S P A C E   I N V A D E R S"
+        kbsmash.text((screen_width - kbsmash.text_width(txt))//2, screen_height//2-1, txt, fg=kbsmash.BRIGHT_WHITE)
+        txt = "Smash space or A to start (esc exits) 🕹"
+        kbsmash.text((screen_width - kbsmash.text_width(txt))//2, screen_height//2+1, txt, fg=kbsmash.GREEN)
         kbsmash.draw()
 
     if not play:
@@ -270,7 +273,7 @@ while True:
 
         kbsmash.clear()
         txt = f"W A V E  {level+1}"
-        kbsmash.text((screen_width - len(txt)) // 2, screen_height // 2, txt, fg=kbsmash.GREEN)
+        kbsmash.text((screen_width - kbsmash.text_width(txt)) // 2, screen_height // 2, txt, fg=kbsmash.GREEN)
         kbsmash.draw()
         time.sleep(2)
 
@@ -353,7 +356,7 @@ while True:
         if player.state == 'dead':
             kbsmash.clear()
             txt = "G A M E  O V E R"
-            kbsmash.text((screen_width - len(txt)) // 2, screen_height // 2, txt, fg=kbsmash.RED)
+            kbsmash.text((screen_width - kbsmash.text_width(txt)) // 2, screen_height // 2, txt, fg=kbsmash.RED)
             kbsmash.draw()
             time.sleep(2)
             break
@@ -363,10 +366,14 @@ while True:
 
     if wave_complete:
         kbsmash.clear()
-        #  🎉 🎊 🎖 🎖 
-        txt = "YOU COMPLETED THE GAME!"
-        kbsmash.text((screen_width - len(txt)) // 2, screen_height // 2, txt, fg=kbsmash.YELLOW)
+        txt = "🎉 🎊 🎖 🏆 YOU COMPLETED THE GAME! 🏆 🎖 🎊 🎉"
+        kbsmash.text((screen_width - kbsmash.text_width(txt)) // 2, screen_height // 2, txt, fg=kbsmash.YELLOW)
         kbsmash.draw()
         time.sleep(3)
+        txt = "PRESS A KEY"
+        kbsmash.text((screen_width - kbsmash.text_width(txt)) // 2, screen_height // 2 + 2, txt, fg=kbsmash.WHITE)
+        while not kbsmash.keys_down():
+            kbsmash.update_keys()
+            kbsmash.draw()
         break
  
